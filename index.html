@@ -51,6 +51,8 @@
   .stat-value { font-size: 1.8rem; font-weight: 700; margin-bottom: 4px; font-family: var(--mono); }
   .stat-label { font-size: 0.78rem; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; }
   .admin-section-title { font-size: .95rem; font-weight: 700; margin: 4px 0 14px; color: var(--text); display: flex; align-items: center; gap: 8px; }
+  .refresh-btn { margin-left: auto; padding: 5px 12px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text2); font-family: var(--font); font-size: 0.78rem; cursor: pointer; transition: all 0.2s; }
+  .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
 
   /* ── UPLOAD BTN ── */
   .btn-upload-new { display: flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: var(--radius); border: 1px solid var(--border-strong); background: var(--surface2); color: var(--text); font-family: var(--font); font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-bottom: 24px; }
@@ -118,6 +120,7 @@
   .btn-primary { width: 100%; padding: 13px; border-radius: var(--radius); border: none; background: linear-gradient(135deg,var(--accent),#00a87d); color: #000; font-family: var(--font); font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s,transform 0.1s; }
   .btn-primary:hover { opacity: 0.9; }
   .btn-primary.vip-btn { background: linear-gradient(135deg,var(--accent-vip),#c17d0a); color: #000; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
   /* ── CODE VIEWER ── */
   .code-viewer { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; font-family: var(--mono); font-size: 0.76rem; color: var(--accent); overflow-x: auto; white-space: pre; max-height: 220px; overflow-y: auto; margin-top: 8px; }
@@ -131,22 +134,25 @@
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
-
-  /* ── VIEW CODE MODAL ── */
   .code-modal .modal { max-width: 720px; }
+
+  .saving-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 9998; display: none; align-items: center; justify-content: center; }
+  .saving-overlay.show { display: flex; }
+  .saving-box { background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: 28px 36px; text-align: center; }
+  .saving-box p { color: var(--text2); font-size: 0.9rem; margin-top: 8px; }
+  .spinner { width: 36px; height: 36px; border: 3px solid var(--surface3); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════
-     LOGIN SCREEN  (shown until correct key)
-     ═══════════════════════════════════════ -->
+<!-- LOGIN SCREEN -->
 <div id="loginScreen">
   <div class="login-box">
     <div class="login-icon">🔐</div>
     <h2>Admin Access</h2>
     <p>PineVault private dashboard — only for Pankaj</p>
-    <div class="private-warning">⚠️ This file is private. Never share this HTML file or its URL with anyone. Keep it only on your own device.</div>
+    <div class="private-warning">⚠️ This file is private. Never share this HTML file with anyone.</div>
     <div class="login-error" id="loginError">❌ Wrong key. Access denied.</div>
     <div class="form-group" style="text-align:left;">
       <label>Admin Key</label>
@@ -156,11 +162,16 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     MAIN CONTENT  (hidden until login)
-     ═══════════════════════════════════════ -->
-<div id="mainContent">
+<!-- SAVING OVERLAY -->
+<div class="saving-overlay" id="savingOverlay">
+  <div class="saving-box">
+    <div class="spinner"></div>
+    <p>Saving to cloud…</p>
+  </div>
+</div>
 
+<!-- MAIN CONTENT -->
+<div id="mainContent">
 <nav>
   <div class="logo">
     <div class="logo-icon">📈</div>
@@ -177,7 +188,7 @@
     <div class="admin-avatar">P</div>
     <div class="admin-info">
       <h2>Pankaj's Dashboard</h2>
-      <p>PineVault Admin Panel — Pine Script codes are stored only here</p>
+      <p>PineVault Admin Panel — data synced to cloud via JSONBin</p>
     </div>
   </div>
 
@@ -190,21 +201,23 @@
 
   <button class="btn-upload-new" onclick="openUploadModal()">➕ Upload New Strategy</button>
 
-  <div class="admin-section-title">💳 VIP Payment Requests</div>
+  <div class="admin-section-title">
+    💳 VIP Payment Requests
+    <button class="refresh-btn" onclick="refreshData()">🔄 Refresh</button>
+  </div>
   <div id="paymentRequestsList"></div>
 
   <div class="admin-section-title" style="margin-top:32px;">📦 Uploaded Strategies</div>
   <div id="adminList"></div>
 </div>
-
-</div><!-- end mainContent -->
+</div>
 
 <!-- UPLOAD MODAL -->
 <div class="modal-overlay" id="uploadModal">
   <div class="modal">
     <button class="modal-close" onclick="closeUploadModal()">✕</button>
     <div class="modal-title">Upload Strategy</div>
-    <div class="modal-sub">Pine Script code is stored here in admin.html only — never in the public store</div>
+    <div class="modal-sub">Data is saved to JSONBin and available on all devices instantly.</div>
 
     <div class="form-group"><label>Strategy Name</label><input type="text" id="upName" placeholder="e.g. EMA Crossover Pro v2"></div>
     <div class="form-group"><label>Caption / Description</label><textarea id="upCaption" rows="3" placeholder="Describe the strategy..."></textarea></div>
@@ -215,7 +228,7 @@
         <input type="file" id="imgInput" accept="image/*" onchange="handleImgSelect(this)">
         <div class="file-drop-icon">🖼️</div>
         <div class="file-drop-text">Drop image or click to browse</div>
-        <div class="file-drop-hint">JPG, PNG, WebP</div>
+        <div class="file-drop-hint">JPG, PNG, WebP — keep under 200KB for fast load</div>
       </div>
       <div class="file-preview" id="imgPreview"><span>✅</span> <span id="imgName">image.jpg</span></div>
     </div>
@@ -226,7 +239,7 @@
         <input type="file" id="pineInput" accept=".pine,.txt,.js" onchange="handlePineSelect(this)">
         <div class="file-drop-icon">📄</div>
         <div class="file-drop-text">Drop Pine Script file or click to browse</div>
-        <div class="file-drop-hint">.pine or .txt format — stored ONLY in this admin file</div>
+        <div class="file-drop-hint">.pine or .txt — code stored in cloud, VIP code hidden from public</div>
       </div>
       <div class="file-preview" id="pinePreview"><span>✅</span> <span id="pineName">strategy.pine</span></div>
     </div>
@@ -262,7 +275,7 @@
   <div class="modal" style="max-width:720px;">
     <button class="modal-close" onclick="document.getElementById('codeModal').classList.remove('open')">✕</button>
     <div class="modal-title" id="codeModalTitle">Pine Script Code</div>
-    <div class="modal-sub">This code is stored in admin localStorage only and is never visible on the public store.</div>
+    <div class="modal-sub">VIP code is stored in cloud (admin-accessible). Free code is also public.</div>
     <button class="mini-btn ok" style="margin-bottom:12px;" onclick="downloadAdminCode()">⬇ Download .pine</button>
     <div class="code-viewer" id="codeViewer"></div>
   </div>
@@ -273,18 +286,32 @@
 
 <script>
 // ════════════════════════════════════════════════
-//  ADMIN KEY — change this to something only you know
+//  JSONBIN CONFIG
+// ════════════════════════════════════════════════
+const BIN_ID  = '6a0be9676610dd3ae86aa9a0';
+const API_KEY = '$2a$10$Plp0mbu0EX8HaPCAmx2rouVjVcrRGBo9DGa8VNQiH0MdtKT0FF8mO';
+const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+
+// ════════════════════════════════════════════════
+//  ADMIN KEY
 // ════════════════════════════════════════════════
 const ADMIN_KEY = 'P@nkaj1243';
 
 // ════════════════════════════════════════════════
 //  STATE
 // ════════════════════════════════════════════════
-let strategies = [];
+let strategies      = [];
 let paymentRequests = [];
-let uploadType = 'free';
-let imgData = null, pineText = null, qrData = null;
-let currentCodeId = null; // for download in code modal
+let uploadType      = 'free';
+let imgData         = null;
+let pineText        = null;
+let qrData          = null;
+let currentCodeId   = null;
+
+// ── SAVING OVERLAY ──
+function showSaving(v) {
+  document.getElementById('savingOverlay').classList.toggle('show', v);
+}
 
 // ── LOGIN ──
 function doLogin() {
@@ -292,10 +319,7 @@ function doLogin() {
   if (val === ADMIN_KEY) {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('mainContent').classList.add('visible');
-    loadData();
-    renderAdminList();
-    renderPaymentRequests();
-    updateStats();
+    refreshData();
     toast('Welcome back, Pankaj! 👋', 'success');
   } else {
     document.getElementById('loginError').classList.add('show');
@@ -308,37 +332,60 @@ function doLogout() {
   document.getElementById('mainContent').classList.remove('visible');
   document.getElementById('adminKeyInput').value = '';
   document.getElementById('loginError').classList.remove('show');
+  strategies = []; paymentRequests = [];
   toast('Logged out', 'success');
 }
 
-// ── DATA ──
-function loadData() {
-  strategies = JSON.parse(localStorage.getItem('pv_strategies') || '[]');
-  paymentRequests = JSON.parse(localStorage.getItem('pv_payment_requests') || '[]');
-}
-
-function saveStrategies() {
+// ── JSONBIN READ ──
+async function loadData() {
   try {
-    // ⚠️  For VIP strategies: we store a STRIPPED version (no code) in pv_strategies
-    //     so the public store can read titles/prices/UPI but NOT the Pine Script.
-    //     The full code is stored separately in pv_admin_codes (admin-only key).
-    const publicSafe = strategies.map(s => {
-      const { code, ...rest } = s;
-      // Free strategies DO include code (they're meant to be downloadable)
-      if (s.type === 'free') return s;
-      // VIP strategies: strip code from shared storage
-      return rest;
+    const res = await fetch(BIN_URL + '/latest', {
+      headers: { 'X-Master-Key': API_KEY }
     });
-    localStorage.setItem('pv_strategies', JSON.stringify(publicSafe));
-    // Admin-only full data (with VIP codes)
-    localStorage.setItem('pv_admin_strategies', JSON.stringify(strategies));
+    if (!res.ok) throw new Error('Fetch failed: ' + res.status);
+    const json = await res.json();
+    const data = json.record || {};
+    strategies      = data.strategies       || [];
+    paymentRequests = data.paymentRequests  || [];
+    return true;
   } catch(e) {
-    toast('Storage full — some data may not save', 'error');
+    toast('Failed to load data: ' + e.message, 'error');
+    return false;
   }
 }
 
-function saveRequests() {
-  localStorage.setItem('pv_payment_requests', JSON.stringify(paymentRequests));
+// ── JSONBIN WRITE ──
+async function saveData() {
+  showSaving(true);
+  try {
+    // For public store: strategies go out WITH code for free, WITHOUT code for VIP
+    // But admin bin stores everything. We save everything together here — the store.html
+    // is responsible for hiding VIP code on the frontend by not displaying it.
+    const res = await fetch(BIN_URL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': API_KEY
+      },
+      body: JSON.stringify({ strategies, paymentRequests })
+    });
+    if (!res.ok) throw new Error('Save failed: ' + res.status);
+    showSaving(false);
+    return true;
+  } catch(e) {
+    showSaving(false);
+    toast('Save failed: ' + e.message, 'error');
+    return false;
+  }
+}
+
+async function refreshData() {
+  const ok = await loadData();
+  if (ok) {
+    renderAdminList();
+    renderPaymentRequests();
+    updateStats();
+  }
 }
 
 // ── UPLOAD MODAL ──
@@ -361,8 +408,8 @@ function closeUploadModal() {
 
 function setType(t) {
   uploadType = t;
-  const btnFree = document.getElementById('btnFree');
-  const btnVip = document.getElementById('btnVip');
+  const btnFree  = document.getElementById('btnFree');
+  const btnVip   = document.getElementById('btnVip');
   const vipFields = document.getElementById('vipFields');
   const uploadBtn = document.getElementById('uploadBtn');
   if (t === 'free') {
@@ -381,46 +428,63 @@ function setType(t) {
 function handleImgSelect(input) {
   const file = input.files[0]; if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => { imgData = e.target.result; document.getElementById('imgName').textContent = file.name; document.getElementById('imgPreview').style.display = 'flex'; };
+  reader.onload = e => {
+    imgData = e.target.result;
+    document.getElementById('imgName').textContent = file.name;
+    document.getElementById('imgPreview').style.display = 'flex';
+  };
   reader.readAsDataURL(file);
 }
 
 function handlePineSelect(input) {
   const file = input.files[0]; if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => { pineText = e.target.result; document.getElementById('pineName').textContent = file.name; document.getElementById('pinePreview').style.display = 'flex'; };
+  reader.onload = e => {
+    pineText = e.target.result;
+    document.getElementById('pineName').textContent = file.name;
+    document.getElementById('pinePreview').style.display = 'flex';
+  };
   reader.readAsText(file);
 }
 
 function handleQrSelect(input) {
   const file = input.files[0]; if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => { qrData = e.target.result; document.getElementById('qrName').textContent = file.name; document.getElementById('qrPreview').style.display = 'flex'; };
+  reader.onload = e => {
+    qrData = e.target.result;
+    document.getElementById('qrName').textContent = file.name;
+    document.getElementById('qrPreview').style.display = 'flex';
+  };
   reader.readAsDataURL(file);
 }
 
-function doUpload() {
-  const name = document.getElementById('upName').value.trim();
+async function doUpload() {
+  const name    = document.getElementById('upName').value.trim();
   const caption = document.getElementById('upCaption').value.trim();
-  if (!name) { toast('Please enter a strategy name', 'error'); return; }
+  if (!name)     { toast('Please enter a strategy name', 'error'); return; }
   if (!pineText) { toast('Please upload a Pine Script file', 'error'); return; }
   if (uploadType === 'vip') {
     if (!document.getElementById('upPrice').value) { toast('Please enter a price', 'error'); return; }
     if (!document.getElementById('upUpi').value.trim()) { toast('Please enter UPI ID', 'error'); return; }
   }
+
   const strategy = {
     id: Date.now().toString(),
     name, caption,
     type: uploadType,
-    code: pineText,           // Stored in admin storage; stripped from public for VIP
+    // VIP: code stored in bin but store.html never renders it (no download button)
+    // Free: code stored and downloadable
+    code: pineText,
     image: imgData || null,
     price: uploadType === 'vip' ? document.getElementById('upPrice').value : null,
-    upi: uploadType === 'vip' ? document.getElementById('upUpi').value.trim() : null,
-    qr: uploadType === 'vip' ? (qrData || null) : null,
+    upi:   uploadType === 'vip' ? document.getElementById('upUpi').value.trim() : null,
+    qr:    uploadType === 'vip' ? (qrData || null) : null,
     date: new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })
   };
+
   strategies.unshift(strategy);
-  saveStrategies();
+  const ok = await saveData();
+  if (!ok) { strategies.shift(); return; }
   closeUploadModal();
   renderAdminList();
   updateStats();
@@ -429,10 +493,7 @@ function doUpload() {
 
 // ── VIEW CODE (admin only) ──
 function viewCode(id) {
-  loadData();
-  // Load from admin-only storage which has full codes
-  const adminStrategies = JSON.parse(localStorage.getItem('pv_admin_strategies') || '[]');
-  const s = adminStrategies.find(x => x.id === id) || strategies.find(x => x.id === id);
+  const s = strategies.find(x => x.id === id);
   if (!s) return;
   currentCodeId = id;
   document.getElementById('codeModalTitle').textContent = s.name + ' — Pine Script';
@@ -441,12 +502,11 @@ function viewCode(id) {
 }
 
 function downloadAdminCode() {
-  const adminStrategies = JSON.parse(localStorage.getItem('pv_admin_strategies') || '[]');
-  const s = adminStrategies.find(x => x.id === currentCodeId) || strategies.find(x => x.id === currentCodeId);
+  const s = strategies.find(x => x.id === currentCodeId);
   if (!s || !s.code) { toast('No code found', 'error'); return; }
   const blob = new Blob([s.code], { type: 'text/plain' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
   a.download = s.name.replace(/[^a-z0-9]/gi, '_') + '.pine';
   a.click();
   toast('Downloaded!', 'success');
@@ -454,20 +514,17 @@ function downloadAdminCode() {
 
 // ── RENDER ADMIN LIST ──
 function renderAdminList() {
-  loadData();
-  const adminStrategies = JSON.parse(localStorage.getItem('pv_admin_strategies') || '[]');
-  const allStrategies = adminStrategies.length ? adminStrategies : strategies;
   const container = document.getElementById('adminList');
-  if (allStrategies.length === 0) {
+  if (strategies.length === 0) {
     container.innerHTML = `<div style="text-align:center;color:var(--text3);padding:40px;font-size:0.85rem;">No strategies uploaded yet.</div>`;
     return;
   }
-  container.innerHTML = allStrategies.map(s => `
+  container.innerHTML = strategies.map(s => `
     <div class="admin-list-item">
       <div class="admin-item-thumb">${s.image ? `<img src="${s.image}" alt="">` : '📈'}</div>
       <div class="admin-item-info">
         <div class="admin-item-name">${escHtml(s.name)}</div>
-        <div class="admin-item-meta">${s.type.toUpperCase()} ${s.type==='vip'?'· ₹'+s.price:''} · ${s.date} ${s.type==='vip'?'· 🔒 Code hidden from public':''}</div>
+        <div class="admin-item-meta">${s.type.toUpperCase()} ${s.type==='vip'?'· ₹'+s.price:''} · ${s.date}</div>
       </div>
       <div class="admin-item-actions">
         <button class="btn-icon" title="View Code" onclick="viewCode('${s.id}')">👁️</button>
@@ -478,18 +535,14 @@ function renderAdminList() {
 }
 
 function updateStats() {
-  loadData();
-  const adminStrategies = JSON.parse(localStorage.getItem('pv_admin_strategies') || '[]');
-  const allStrategies = adminStrategies.length ? adminStrategies : strategies;
-  document.getElementById('statTotal').textContent = allStrategies.length;
-  document.getElementById('statFree').textContent = allStrategies.filter(s => s.type === 'free').length;
-  document.getElementById('statVip').textContent = allStrategies.filter(s => s.type === 'vip').length;
+  document.getElementById('statTotal').textContent   = strategies.length;
+  document.getElementById('statFree').textContent    = strategies.filter(s => s.type === 'free').length;
+  document.getElementById('statVip').textContent     = strategies.filter(s => s.type === 'vip').length;
   document.getElementById('statPending').textContent = paymentRequests.filter(r => r.status === 'pending').length;
 }
 
 // ── PAYMENT REQUESTS ──
 function renderPaymentRequests() {
-  loadData();
   const c = document.getElementById('paymentRequestsList');
   if (paymentRequests.length === 0) {
     c.innerHTML = `<div style="text-align:center;color:var(--text3);padding:24px;font-size:0.85rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">No VIP payment requests yet.</div>`;
@@ -514,55 +567,56 @@ function renderPaymentRequests() {
           <button class="mini-btn ok" onclick="approveRequest('${r.id}')">✅ Approve & Unlock</button>
           <button class="mini-btn no" onclick="rejectRequest('${r.id}')">❌ Reject</button>
         ` : `
-          <span style="font-size:.78rem;color:var(--text3)">Delivery link: ${r.deliveryLink ? `<a href="${r.deliveryLink}" target="_blank" style="color:var(--accent)">${r.deliveryLink}</a>` : 'not set'}</span>
+          <span style="font-size:.78rem;color:var(--text3)">Delivery: ${r.deliveryLink ? `<a href="${r.deliveryLink}" target="_blank" style="color:var(--accent)">${r.deliveryLink}</a>` : 'not set'}</span>
         `}
         <button class="mini-btn no" onclick="deleteRequest('${r.id}')">🗑️ Delete</button>
       </div>
-      ${r.status === 'pending' ? `<div class="delivery-hint">💡 Paste a Google Drive / Dropbox link to the .pine file above before approving. The customer will see this link on their "My Access" page. If left blank, they'll be told to wait for your manual delivery.</div>` : ''}
+      ${r.status === 'pending' ? `<div class="delivery-hint">💡 Paste a Google Drive / Dropbox link to the .pine file above before approving. Customer will see this link on their "My Access" page.</div>` : ''}
     </div>
   `).join('');
 }
 
-function approveRequest(id) {
+async function approveRequest(id) {
   const r = paymentRequests.find(x => x.id === id); if (!r) return;
   const linkEl = document.getElementById('link_' + id);
   r.deliveryLink = linkEl ? linkEl.value.trim() : null;
   r.status = 'approved';
-  saveRequests();
+  const ok = await saveData();
+  if (!ok) { r.status = 'pending'; return; }
   renderPaymentRequests();
   updateStats();
   toast('Download access approved ✅', 'success');
 }
 
-function rejectRequest(id) {
+async function rejectRequest(id) {
   const r = paymentRequests.find(x => x.id === id); if (!r) return;
   r.status = 'rejected';
-  saveRequests();
+  const ok = await saveData();
+  if (!ok) { r.status = 'pending'; return; }
   renderPaymentRequests();
   updateStats();
   toast('Request rejected', 'success');
 }
 
-function deleteRequest(id) {
+async function deleteRequest(id) {
   if (!confirm('Delete this payment request?')) return;
+  const prev = [...paymentRequests];
   paymentRequests = paymentRequests.filter(x => x.id !== id);
-  saveRequests();
+  const ok = await saveData();
+  if (!ok) { paymentRequests = prev; return; }
   renderPaymentRequests();
   updateStats();
   toast('Request deleted', 'success');
 }
 
 // ── DELETE STRATEGY ──
-function deleteStrategy(id) {
+async function deleteStrategy(id) {
   if (!confirm('Delete this strategy? This cannot be undone.')) return;
-  loadData();
+  const prev = [...strategies];
   strategies = strategies.filter(s => s.id !== id);
-  let adminStrategies = JSON.parse(localStorage.getItem('pv_admin_strategies') || '[]');
-  adminStrategies = adminStrategies.filter(s => s.id !== id);
-  localStorage.setItem('pv_admin_strategies', JSON.stringify(adminStrategies));
   paymentRequests = paymentRequests.filter(r => r.strategyId !== id);
-  saveStrategies();
-  saveRequests();
+  const ok = await saveData();
+  if (!ok) { strategies = prev; return; }
   renderAdminList();
   renderPaymentRequests();
   updateStats();
