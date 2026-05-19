@@ -1,1 +1,689 @@
-<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>PineVault Admin</title><link href='https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap' rel='stylesheet'><style>*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#f8fafc,#eef4f8);color:#101828;font-family:Inter,Arial,sans-serif}nav{position:sticky;top:0;background:#ffffffd9;backdrop-filter:blur(18px);border-bottom:1px solid #e5e7eb;padding:13px 18px;display:flex;justify-content:space-between;align-items:center;z-index:5}.logo{font-size:20px;font-weight:900;letter-spacing:-.04em}.logo i{font-style:normal;background:#101828;color:#fff;border-radius:12px;padding:8px;margin-right:8px}.btn{border:1px solid #e5e7eb;background:#fff;color:#101828;border-radius:13px;padding:10px 14px;font-weight:900;cursor:pointer;text-decoration:none}.green{background:#12b886!important;color:white!important;border:0!important}.gold{background:#f59e0b!important;color:#111!important;border:0!important}.red{background:#ef4444!important;color:white!important;border:0!important}.wrap{max-width:1100px;margin:auto;padding:28px 18px}.card{background:#fff;border:1px solid #e5e7eb;border-radius:24px;padding:20px;margin-bottom:18px;box-shadow:0 12px 36px #1018280c}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}label{display:block;color:#667085;font-size:12px;font-weight:900;margin:12px 0 6px;text-transform:uppercase;letter-spacing:.04em}input,textarea,select{width:100%;background:#fbfdff;border:1px solid #e5e7eb;color:#101828;border-radius:14px;padding:12px;font-family:inherit}input:focus,textarea:focus,select:focus{outline:0;border-color:#12b886;box-shadow:0 0 0 4px #12b88622}textarea{min-height:92px;resize:vertical}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:20px}.muted{color:#667085;font-size:14px;line-height:1.6}.heroTitle{margin:0;font-size:38px;letter-spacing:-.06em}.list{display:grid;gap:12px}.item{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:12px;transition:.18s}.item:hover{box-shadow:0 16px 42px #10182812;transform:translateY(-2px)}.thumb{width:74px;height:58px;background:#eef2f7;border-radius:14px;object-fit:cover;display:flex;align-items:center;justify-content:center;flex-shrink:0}.info{flex:1}.name{font-weight:900}.meta{color:#667085;font-size:13px;margin-top:5px}.pill{display:inline-block;padding:4px 9px;border-radius:99px;font-size:12px;font-weight:900}.vip{color:#b45309;background:#fff7ed;border:1px solid #fed7aa}.free{color:#027a48;background:#ecfdf3;border:1px solid #abefc6}.published{color:#027a48;font-weight:900;margin-left:8px}.toast{position:fixed;bottom:18px;right:18px;background:#101828;color:#fff;border-radius:16px;padding:13px 15px;font-weight:800;display:none;z-index:20}.toast.show{display:block}.hide{display:none!important}.successBox{display:none;margin-top:12px;background:#ecfdf3;color:#027a48;border:1px solid #abefc6;border-radius:14px;padding:12px;font-weight:900}@media(max-width:720px){.grid{grid-template-columns:1fr}.top{flex-direction:column;align-items:stretch}.item{align-items:flex-start}.thumb{width:58px;height:48px}.heroTitle{font-size:30px}}</style></head><body><nav><div class='logo'><i>✓</i>PineVault Admin</div><a class='btn' target='_blank' href='https://pankaj112343.github.io/Algo-code/'>Open Store</a></nav><main class='wrap'><section id='login' class='card'><h2>Connect GitHub</h2><p class='muted'>Paste your GitHub fine-grained token for <b>pankaj112343/Algo-code</b>. It is saved only in this browser.</p><label>GitHub Token</label><input id='token' type='password' placeholder='github_pat_...'><button class='btn green' style='margin-top:14px;width:100%' onclick='login()'>Load Dashboard</button></section><section id='dash' class='hide'><div class='top'><div><h1 class='heroTitle'>Dashboard</h1><p class='muted'>Upload, edit, and publish strategy listings to your public store.</p></div><div style='display:flex;gap:8px'><button class='btn' onclick='loadData()'>Refresh</button><button class='btn red' onclick='logout()'>Logout</button></div></div><section class='card'><h2 id='formTitle'>Add New Listing</h2><div class='grid'><div><label>Name</label><input id='listingName' placeholder='EMA Scalping Pro'></div><div><label>Type</label><select id='listingType'><option value='vip'>VIP</option><option value='free'>Free</option></select></div><div><label>Price</label><input id='listingPrice' placeholder='299'></div><div><label>UPI ID</label><input id='listingUpi' placeholder='yourupi@upi'></div><div style='grid-column:1/-1'><label>Demo Image URL</label><input id='listingImage' placeholder='https://...'></div><div style='grid-column:1/-1'><label>Description</label><textarea id='listingCaption' placeholder='Write strategy details'></textarea></div></div><div style='display:flex;gap:8px;margin-top:14px;flex-wrap:wrap'><button class='btn gold' onclick='saveListing()' id='saveBtn'>Add Listing</button><button class='btn' onclick='clearForm()'>Clear</button></div><div id='successBox' class='successBox'>✓ Published successfully. Store will update shortly.</div><p class='muted'>Keep actual Pine/Python code private. This page publishes only demo/info; you manually send code on WhatsApp.</p></section><section class='card'><h2>Settings</h2><div class='grid'><div><label>WhatsApp Number with country code</label><input id='whatsapp' placeholder='918135975559'></div><div><label>Default UPI</label><input id='defaultUpi' placeholder='yourupi@upi'></div></div><button class='btn green' style='margin-top:14px' onclick='pushData()'>Save Settings</button></section><section class='card'><h2>Current Listings <span id='count'></span></h2><div id='list' class='list'><p class='muted'>Loading...</p></div></section></section></main><div id='toast' class='toast'></div><script>const OWNER='pankaj112343',REPO='Algo-code',PATH='data.json',BRANCH='main';let token='',sha='',data={updatedAt:'',whatsapp:'918135975559',defaultUpi:'yourupi@upi',strategies:[]},editId=null;function apiUrl(){return `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}?ref=${BRANCH}`}function headers(){return {'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}}function get(id){return document.getElementById(id)}function login(){token=get('token').value.trim();if(!token)return toast('Paste token first');localStorage.setItem('pv_token',token);get('login').classList.add('hide');get('dash').classList.remove('hide');loadData()}function logout(){localStorage.removeItem('pv_token');location.reload()}async function loadData(){try{let r=await fetch(apiUrl(),{headers:headers()});if(!r.ok)throw Error('GitHub load failed: '+r.status);let j=await r.json();sha=j.sha;data=JSON.parse(atob(j.content.replace(/\n/g,'')));get('whatsapp').value=data.whatsapp||'918135975559';get('defaultUpi').value=data.defaultUpi||'yourupi@upi';render();toast('Loaded ✓')}catch(e){toast(e.message)}}function render(){let list=get('list');get('count').textContent='('+(data.strategies||[]).length+')';if(!data.strategies||!data.strategies.length){list.innerHTML='<p class=muted>No listings yet</p>';return}list.innerHTML=data.strategies.map(s=>`<div class=item><div class=thumb>${s.image?`<img class=thumb src='${esc(s.image)}'>`:'📈'}</div><div class=info><div class=name>${esc(s.name)} <span class=published>✓ Published</span></div><div class=meta><span class='pill ${s.type==='vip'?'vip':'free'}'>${s.type}</span> ₹${esc(s.price||'Free')} · ${esc(s.date||'')}</div></div><button class=btn onclick='editListing("${s.id}")'>Edit</button><button class='btn red' onclick='deleteListing("${s.id}")'>Delete</button></div>`).join('')}function clearForm(){editId=null;get('formTitle').textContent='Add New Listing';get('saveBtn').textContent='Add Listing';['listingName','listingPrice','listingUpi','listingImage','listingCaption'].forEach(i=>get(i).value='');get('listingType').value='vip'}function editListing(id){let s=data.strategies.find(x=>x.id===id);if(!s)return;editId=id;get('formTitle').textContent='Edit Listing';get('saveBtn').textContent='Update Listing';get('listingName').value=s.name||'';get('listingType').value=s.type||'vip';get('listingPrice').value=s.price||'';get('listingUpi').value=s.upi||'';get('listingImage').value=s.image||'';get('listingCaption').value=s.caption||'';scrollTo({top:0,behavior:'smooth'})}function saveListing(){let s={id:editId||('s-'+Date.now()),name:get('listingName').value.trim(),type:get('listingType').value,price:get('listingPrice').value.trim(),upi:get('listingUpi').value.trim()||data.defaultUpi||'',image:get('listingImage').value.trim(),caption:get('listingCaption').value.trim(),date:new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})};if(!s.name)return toast('Name required');if(editId){data.strategies=data.strategies.map(x=>x.id===editId?{...x,...s}:x)}else{data.strategies.unshift(s)}clearForm();render();pushData(true)}function deleteListing(id){if(!confirm('Delete this listing?'))return;data.strategies=data.strategies.filter(x=>x.id!==id);render();pushData(false)}async function pushData(showSuccess){try{data.whatsapp=get('whatsapp').value.trim()||'918135975559';data.defaultUpi=get('defaultUpi').value.trim()||'yourupi@upi';data.updatedAt=new Date().toISOString();let content=btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));let r=await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}`,{method:'PUT',headers:{...headers(),'Content-Type':'application/json'},body:JSON.stringify({message:'Update PineVault data',content,sha,branch:BRANCH})});if(!r.ok){let t=await r.text();throw Error('Save failed: '+r.status+' '+t.slice(0,120))}let j=await r.json();sha=j.content.sha;if(showSuccess){get('successBox').style.display='block';setTimeout(()=>get('successBox').style.display='none',4500)}toast('Saved ✓ Store updates in 1-3 minutes')}catch(e){toast(e.message)}}function esc(s){return String(s||'').replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m]))}function toast(m){let t=get('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500)}window.onload=()=>{let t=localStorage.getItem('pv_token');if(t){token=t;get('token').value=t;get('login').classList.add('hide');get('dash').classList.remove('hide');loadData()}}</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PineVault Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05060a;--s1:#0c0e14;--s2:#12151e;--s3:#181c28;
+  --b1:rgba(255,255,255,0.05);--b2:rgba(255,255,255,0.10);--b3:rgba(255,255,255,0.16);
+  --g1:#00ffcc;--g2:#0ea5e9;--gold:#fbbf24;--red:#f43f5e;--grn:#22c55e;--purple:#a78bfa;
+  --t1:#eef0f8;--t2:#7a8499;--t3:#3d4459;
+  --f:'Outfit',sans-serif;--m:'JetBrains Mono',monospace;
+  --r:12px;--rl:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--t1);font-family:var(--f);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,255,204,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,204,.018) 1px,transparent 1px);background-size:50px 50px;pointer-events:none;z-index:0}
+
+/* SETUP SCREEN */
+#setup{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px}
+.setup-box{width:100%;max-width:480px;background:var(--s1);border:1px solid var(--b2);border-radius:var(--rl);padding:36px 32px}
+.setup-logo{display:flex;align-items:center;gap:10px;font-size:1.2rem;font-weight:800;margin-bottom:28px}
+.setup-logo-ico{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--g1),var(--g2));display:flex;align-items:center;justify-content:center;font-size:17px}
+.setup-ttl{font-size:1.1rem;font-weight:700;margin-bottom:5px}
+.setup-sub{font-size:.82rem;color:var(--t2);margin-bottom:22px;line-height:1.6}
+.setup-err{background:rgba(244,63,94,.07);border:1px solid rgba(244,63,94,.2);border-radius:8px;padding:9px 12px;font-size:.78rem;color:var(--red);display:none;margin-bottom:14px}
+.setup-err.show{display:block}
+.info-box{background:rgba(0,255,204,.05);border:1px solid rgba(0,255,204,.12);border-radius:8px;padding:12px 14px;font-size:.79rem;color:var(--t2);margin-bottom:18px;line-height:1.65}
+.info-box strong{color:var(--g1)}
+
+/* MAIN LAYOUT */
+#app{display:none;position:relative;z-index:1}
+header{background:rgba(5,6,10,.95);backdrop-filter:blur(18px);border-bottom:1px solid var(--b1);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:62px;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:10px;font-size:1.1rem;font-weight:800}
+.logo-ico{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--g1),var(--g2));display:flex;align-items:center;justify-content:center;font-size:13px}
+.hdr-right{display:flex;align-items:center;gap:10px}
+.btn-sm{padding:6px 14px;border-radius:8px;border:1px solid var(--b2);background:transparent;color:var(--t2);font-family:var(--f);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-sm:hover{color:var(--t1);border-color:var(--b3)}
+.btn-sm.danger:hover{color:var(--red);border-color:rgba(244,63,94,.3)}
+.repo-info{font-size:.75rem;color:var(--t3);font-family:var(--m)}
+
+/* CONTENT */
+.content{max-width:1100px;margin:0 auto;padding:36px 2rem}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:32px}
+.stat{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:18px 20px}
+.stat-val{font-size:1.9rem;font-weight:800;font-family:var(--m);margin-bottom:3px}
+.stat-lbl{font-size:.72rem;color:var(--t2);text-transform:uppercase;letter-spacing:.05em}
+
+/* TABS */
+.tabs{display:flex;gap:3px;background:var(--s2);border-radius:var(--r);padding:4px;margin-bottom:22px}
+.tab{flex:1;padding:9px;border-radius:8px;border:none;background:transparent;color:var(--t2);font-family:var(--f);font-size:.84rem;font-weight:700;cursor:pointer;transition:all .2s;position:relative}
+.tab.on{background:var(--s1);color:var(--t1)}
+.tnotif{position:absolute;top:4px;right:8px;background:var(--red);color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:800}
+
+/* ACTIONS BAR */
+.act-bar{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.btn-add{display:flex;align-items:center;gap:7px;padding:10px 20px;border-radius:var(--r);border:none;background:linear-gradient(135deg,var(--g1),#00b890);color:#000;font-family:var(--f);font-size:.88rem;font-weight:800;cursor:pointer;transition:opacity .2s}
+.btn-add:hover{opacity:.88}
+.btn-refresh{display:flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--r);border:1px solid var(--b2);background:transparent;color:var(--t2);font-family:var(--f);font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-refresh:hover{border-color:var(--b3);color:var(--t1)}
+.syncing{font-size:.77rem;color:var(--t3);font-family:var(--m);margin-left:auto}
+
+/* LIST ITEMS */
+.item{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:13px 15px;display:flex;align-items:center;gap:13px;margin-bottom:9px;transition:border-color .2s}
+.item:hover{border-color:var(--b2)}
+.item-thumb{width:56px;height:42px;border-radius:7px;background:var(--s2);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+.item-thumb img{width:100%;height:100%;object-fit:cover}
+.item-info{flex:1;min-width:0}
+.item-name{font-size:.9rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-meta{font-size:.72rem;color:var(--t3);margin-top:2px;font-family:var(--m)}
+.item-acts{display:flex;gap:6px;flex-shrink:0}
+.ib{width:30px;height:30px;border-radius:7px;border:1px solid var(--b1);background:transparent;color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.82rem;transition:all .2s}
+.ib:hover{border-color:var(--red);color:var(--red)}
+
+/* REQUEST ITEMS */
+.req{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:15px 17px;margin-bottom:10px}
+.req-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.req-name{font-size:.92rem;font-weight:700}
+.req-strat{font-size:.78rem;color:var(--gold);margin-top:2px}
+.req-meta{font-size:.71rem;color:var(--t3);font-family:var(--m);margin-top:4px}
+.spill{font-size:.67rem;font-weight:700;padding:3px 9px;border-radius:100px;white-space:nowrap;flex-shrink:0}
+.sp{background:rgba(251,191,36,.09);color:var(--gold);border:1px solid rgba(251,191,36,.18)}
+.sa{background:rgba(34,197,94,.09);color:var(--grn);border:1px solid rgba(34,197,94,.18)}
+.sr{background:rgba(244,63,94,.09);color:var(--red);border:1px solid rgba(244,63,94,.18)}
+.ss-img{width:100%;border-radius:8px;margin-top:11px;border:1px solid var(--b1);display:block;max-height:350px;object-fit:contain}
+.req-acts{display:flex;gap:7px;margin-top:12px}
+.btn-ap{padding:7px 15px;border-radius:7px;border:1px solid rgba(34,197,94,.28);background:rgba(34,197,94,.07);color:var(--grn);font-family:var(--f);font-size:.79rem;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-ap:hover{background:rgba(34,197,94,.16)}
+.btn-rj{padding:7px 15px;border-radius:7px;border:1px solid rgba(244,63,94,.28);background:rgba(244,63,94,.07);color:var(--red);font-family:var(--f);font-size:.79rem;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-rj:hover{background:rgba(244,63,94,.16)}
+
+/* MODAL / UPLOAD PANEL */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(10px);z-index:500;display:none;align-items:center;justify-content:center;padding:16px}
+.ov.open{display:flex}
+.mod{background:var(--s1);border:1px solid var(--b2);border-radius:var(--rl);width:100%;max-width:580px;max-height:93vh;overflow-y:auto;padding:28px;position:relative}
+.mx{position:absolute;top:13px;right:13px;background:var(--s2);border:1px solid var(--b1);border-radius:7px;width:29px;height:29px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t2);font-size:.9rem;transition:all .2s}
+.mx:hover{color:var(--t1)}
+.mttl{font-size:1.2rem;font-weight:800;margin-bottom:4px}
+.msub{font-size:.8rem;color:var(--t2);margin-bottom:22px}
+
+/* FORM */
+.fg{margin-bottom:16px}
+label{display:block;font-size:.72rem;font-weight:700;color:var(--t2);letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px}
+input[type=text],input[type=number],textarea{width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:11px 13px;color:var(--t1);font-family:var(--f);font-size:.87rem;outline:none;transition:border-color .2s;resize:vertical}
+input:focus,textarea:focus{border-color:rgba(0,255,204,.35)}
+textarea.code-ta{font-family:var(--m);font-size:.78rem;color:var(--g1);line-height:1.6;min-height:180px}
+.fd{border:2px dashed var(--b2);border-radius:var(--r);padding:22px 14px;text-align:center;cursor:pointer;background:var(--s2);position:relative;transition:all .2s}
+.fd:hover{border-color:rgba(0,255,204,.3);background:rgba(0,255,204,.02)}
+.fd input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;border:none;background:none;padding:0}
+.fd-i{font-size:1.7rem;margin-bottom:6px}
+.fd-t{font-size:.8rem;color:var(--t2)}
+.fd-h{font-size:.71rem;color:var(--t3);margin-top:3px}
+.fprev{margin-top:8px;display:none;align-items:center;gap:7px;background:rgba(0,255,204,.05);border:1px solid rgba(0,255,204,.14);border-radius:8px;padding:7px 11px;font-size:.78rem;color:var(--g1)}
+.img-thumb-prev{margin-top:8px;display:none;border-radius:8px;overflow:hidden;max-height:120px}
+.img-thumb-prev img{width:100%;max-height:120px;object-fit:cover;display:block}
+.tgl{display:flex;gap:7px;margin-bottom:2px}
+.tgl-btn{flex:1;padding:9px;border-radius:8px;border:1px solid var(--b1);background:transparent;color:var(--t2);font-family:var(--f);font-size:.83rem;font-weight:700;cursor:pointer;transition:all .2s}
+.tf{border-color:var(--g1);background:rgba(0,255,204,.07);color:var(--g1)}
+.tv{border-color:var(--gold);background:rgba(251,191,36,.07);color:var(--gold)}
+.vip-flds{display:none}.vip-flds.show{display:block}
+.btn-p{width:100%;padding:13px;border-radius:var(--r);border:none;font-family:var(--f);font-size:.92rem;font-weight:800;cursor:pointer;transition:opacity .2s,transform .1s;letter-spacing:-.01em}
+.btn-p:active{transform:scale(.99)}
+.btn-green{background:linear-gradient(135deg,var(--g1),#00b890);color:#000}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#d97706);color:#000}
+.btn-p:hover{opacity:.88}
+.err-b{background:rgba(244,63,94,.07);border:1px solid rgba(244,63,94,.2);border-radius:8px;padding:9px 12px;font-size:.79rem;color:var(--red);display:none;margin-bottom:13px}
+.err-b.show{display:block}
+.divider{height:1px;background:var(--b1);margin:18px 0}
+.progress-bar{height:3px;background:var(--s2);border-radius:2px;margin-bottom:22px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--g1),var(--g2));transition:width .3s;width:0}
+
+.empty{text-align:center;padding:60px 2rem;color:var(--t3)}
+.empty h3{color:var(--t2);margin-bottom:5px;font-size:.95rem}
+
+.toasts{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:7px}
+.toast{background:var(--s2);border:1px solid var(--b2);border-radius:var(--r);padding:11px 15px;font-size:.8rem;color:var(--t1);display:flex;align-items:center;gap:8px;max-width:300px;animation:tIn .3s ease;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.toast.ok{border-left:3px solid var(--grn)}
+.toast.bad{border-left:3px solid var(--red)}
+.toast.info{border-left:3px solid var(--g2)}
+@keyframes tIn{from{transform:translateX(110%);opacity:0}to{transform:none;opacity:1}}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--s3);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setup">
+  <div class="setup-box">
+    <div class="setup-logo">
+      <div class="setup-logo-ico">📈</div>
+      PineVault Admin
+    </div>
+    <div class="setup-ttl">Connect to GitHub</div>
+    <div class="setup-sub">This panel uses GitHub to store and manage your strategies. Your token is saved only in this browser.</div>
+    <div class="info-box">
+      <strong>How to get a token:</strong><br>
+      GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token<br><br>
+      Required scopes: <strong>repo</strong> (full control)
+    </div>
+    <div class="setup-err" id="setupErr"></div>
+    <div class="fg"><label>GitHub Username</label><input type="text" id="ghUser" placeholder="e.g. pankaj123"></div>
+    <div class="fg"><label>Repository Name</label><input type="text" id="ghRepo" placeholder="e.g. pinevault"></div>
+    <div class="fg"><label>Branch</label><input type="text" id="ghBranch" placeholder="main" value="main"></div>
+    <div class="fg"><label>GitHub Personal Access Token</label><input type="text" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"></div>
+    <button class="btn-p btn-green" onclick="doSetup()">Connect & Continue →</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <header>
+    <div class="logo">
+      <div class="logo-ico">📈</div>
+      PineVault Admin
+    </div>
+    <div class="hdr-right">
+      <span class="repo-info" id="repoLabel"></span>
+      <button class="btn-sm" onclick="syncNow()">🔄 Sync</button>
+      <button class="btn-sm danger" onclick="doDisconnect()">Disconnect</button>
+    </div>
+  </header>
+
+  <div class="content">
+    <div class="stats">
+      <div class="stat"><div class="stat-val" id="sTot" style="color:var(--g1)">0</div><div class="stat-lbl">Total Strategies</div></div>
+      <div class="stat"><div class="stat-val" id="sFree" style="color:var(--purple)">0</div><div class="stat-lbl">Free</div></div>
+      <div class="stat"><div class="stat-val" id="sVip" style="color:var(--gold)">0</div><div class="stat-lbl">VIP</div></div>
+      <div class="stat"><div class="stat-val" id="sReq" style="color:var(--red)">0</div><div class="stat-lbl">Pending Requests</div></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab on" id="tab-s" onclick="switchTab('s')">📊 Strategies</button>
+      <button class="tab" id="tab-r" onclick="switchTab('r')">
+        🛒 Purchase Requests
+        <span class="tnotif" id="rnotif" style="display:none">0</span>
+      </button>
+    </div>
+
+    <!-- STRATEGIES TAB -->
+    <div id="pane-s">
+      <div class="act-bar">
+        <button class="btn-add" onclick="openUpload()">➕ Upload New Strategy</button>
+        <button class="btn-refresh" onclick="syncNow()">🔄 Refresh from GitHub</button>
+        <span class="syncing" id="syncStatus"></span>
+      </div>
+      <div id="stratList"></div>
+    </div>
+
+    <!-- REQUESTS TAB -->
+    <div id="pane-r" style="display:none">
+      <div class="act-bar">
+        <button class="btn-refresh" onclick="syncNow()">🔄 Refresh Requests</button>
+        <span class="syncing" id="syncStatus2"></span>
+      </div>
+      <div id="reqList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- UPLOAD MODAL -->
+<div class="ov" id="upOv">
+  <div class="mod">
+    <div class="mx" onclick="closeUp()">✕</div>
+    <div class="mttl">Upload Strategy</div>
+    <div class="msub">Saves directly to your GitHub repo</div>
+    <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
+    <div class="err-b" id="upErr"></div>
+    <div class="fg"><label>Strategy Name</label><input type="text" id="upName" placeholder="e.g. EMA Crossover Pro v2"></div>
+    <div class="fg"><label>Caption / Description</label><textarea id="upCap" rows="3" placeholder="What it does, best assets, timeframe..."></textarea></div>
+
+    <div class="fg">
+      <label>Thumbnail Image</label>
+      <div class="fd"><input type="file" id="imgIn" accept="image/*" onchange="hImg(this)"><div class="fd-i">🖼️</div><div class="fd-t">Drop or click — JPG, PNG, WebP</div><div class="fd-h">Will be resized and stored in repo</div></div>
+      <div class="img-thumb-prev" id="imgThumb"><img id="imgThumbImg" src="" alt=""></div>
+      <div class="fprev" id="imgPrev">✅ <span id="imgNm"></span></div>
+    </div>
+
+    <div class="fg">
+      <label>Pine Script Code</label>
+      <div class="fg" style="margin-bottom:8px">
+        <div class="fd"><input type="file" id="pineIn" accept=".pine,.txt" onchange="hPine(this)"><div class="fd-i">📄</div><div class="fd-t">Upload .pine or .txt file</div></div>
+        <div class="fprev" id="pinePrev">✅ <span id="pineNm"></span></div>
+      </div>
+      <div style="font-size:.72rem;color:var(--t3);margin-bottom:6px;text-align:center">— or paste code directly —</div>
+      <textarea class="code-ta" id="upCode" placeholder="// Paste your Pine Script code here..."></textarea>
+    </div>
+
+    <div class="fg">
+      <label>Access Type</label>
+      <div class="tgl">
+        <button class="tgl-btn tf" id="bFree" onclick="setType('free')">🆓 Free</button>
+        <button class="tgl-btn" id="bVip" onclick="setType('vip')">⭐ VIP</button>
+      </div>
+    </div>
+
+    <div class="vip-flds" id="vipFlds">
+      <div class="fg"><label>Price (₹)</label><input type="number" id="upPrice" placeholder="e.g. 499"></div>
+      <div class="fg"><label>UPI ID</label><input type="text" id="upUpi" placeholder="e.g. pankaj@paytm"></div>
+      <div class="fg">
+        <label>UPI QR Code Image (optional)</label>
+        <div class="fd"><input type="file" id="qrIn" accept="image/*" onchange="hQr(this)"><div class="fd-i">📱</div><div class="fd-t">Upload your UPI QR Code</div></div>
+        <div class="fprev" id="qrPrev">✅ <span id="qrNm"></span></div>
+      </div>
+    </div>
+
+    <button class="btn-p btn-green" id="upBtn" onclick="doUpload()">Upload to GitHub →</button>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+// ════════════════════════════════════════════
+// GITHUB CONFIG (saved in localStorage)
+// ════════════════════════════════════════════
+let GH = {};
+let strategies = [];
+let requests = [];
+let uploading = false;
+let upType = 'free';
+let upImgData = null, upCodeData = null, upQrData = null;
+
+function ghHeaders() {
+  return {
+    'Authorization': `token ${GH.token}`,
+    'Accept': 'application/vnd.github.v3+json',
+    'Content-Type': 'application/json'
+  };
+}
+const apiBase = () => `https://api.github.com/repos/${GH.owner}/${GH.repo}`;
+const rawBase = () => `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}`;
+
+// ════════════════════════════════════════════
+// SETUP
+// ════════════════════════════════════════════
+async function doSetup() {
+  const owner = document.getElementById('ghUser').value.trim();
+  const repo  = document.getElementById('ghRepo').value.trim();
+  const branch= document.getElementById('ghBranch').value.trim() || 'main';
+  const token = document.getElementById('ghToken').value.trim();
+  const er = document.getElementById('setupErr');
+
+  if (!owner || !repo || !token) { er.textContent = '❌ Fill all fields.'; er.classList.add('show'); return; }
+  er.classList.remove('show');
+
+  GH = { owner, repo, branch, token };
+
+  // Test connection
+  try {
+    const r = await fetch(`${apiBase()}`, { headers: ghHeaders() });
+    if (!r.ok) throw new Error('Auth failed');
+  } catch(e) {
+    er.textContent = '❌ Connection failed. Check username, repo name, and token.';
+    er.classList.add('show'); return;
+  }
+
+  // Ensure data folder and files exist
+  await ensureFile('data/strategies.json', '[]');
+  await ensureFile('data/requests.json', '[]');
+
+  localStorage.setItem('pvgh', JSON.stringify(GH));
+  startApp();
+}
+
+async function ensureFile(path, defaultContent) {
+  const r = await fetch(`${apiBase()}/contents/${path}`, { headers: ghHeaders() });
+  if (r.status === 404) {
+    await fetch(`${apiBase()}/contents/${path}`, {
+      method: 'PUT',
+      headers: ghHeaders(),
+      body: JSON.stringify({
+        message: `init ${path}`,
+        content: btoa(defaultContent),
+        branch: GH.branch
+      })
+    });
+  }
+}
+
+function doDisconnect() {
+  if (!confirm('Disconnect? You can reconnect anytime.')) return;
+  localStorage.removeItem('pvgh');
+  GH = {};
+  document.getElementById('setup').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+// ════════════════════════════════════════════
+// APP START
+// ════════════════════════════════════════════
+function startApp() {
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('repoLabel').textContent = `${GH.owner}/${GH.repo}`;
+  syncNow();
+}
+
+async function syncNow() {
+  setSyncStatus('⏳ Syncing...');
+  try {
+    strategies = await fetchJson('data/strategies.json');
+    requests   = await fetchJson('data/requests.json');
+    renderAll();
+    setSyncStatus('✅ Synced ' + new Date().toLocaleTimeString());
+  } catch(e) {
+    setSyncStatus('❌ Sync failed');
+    toast('Sync failed — check connection', 'bad');
+  }
+}
+
+async function fetchJson(path) {
+  const r = await fetch(`${rawBase()}/${path}?t=${Date.now()}`);
+  if (!r.ok) return [];
+  return r.json();
+}
+
+async function saveJson(path, data, msg) {
+  // Get current SHA
+  const r = await fetch(`${apiBase()}/contents/${path}`, { headers: ghHeaders() });
+  const d = await r.json();
+  const sha = d.sha;
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+  const res = await fetch(`${apiBase()}/contents/${path}`, {
+    method: 'PUT',
+    headers: ghHeaders(),
+    body: JSON.stringify({ message: msg, content, sha, branch: GH.branch })
+  });
+  if (!res.ok) throw new Error('Save failed');
+}
+
+function setSyncStatus(msg) {
+  document.getElementById('syncStatus').textContent = msg;
+  document.getElementById('syncStatus2').textContent = msg;
+}
+
+// ════════════════════════════════════════════
+// TABS
+// ════════════════════════════════════════════
+function switchTab(t) {
+  ['s','r'].forEach(v => {
+    document.getElementById('tab-'+v).className='tab'+(v===t?' on':'');
+    document.getElementById('pane-'+v).style.display=v===t?'block':'none';
+  });
+}
+
+// ════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════
+function renderAll() {
+  // Stats
+  document.getElementById('sTot').textContent = strategies.length;
+  document.getElementById('sFree').textContent = strategies.filter(s=>s.type==='free').length;
+  document.getElementById('sVip').textContent = strategies.filter(s=>s.type==='vip').length;
+  const pend = requests.filter(r=>r.status==='pending').length;
+  document.getElementById('sReq').textContent = pend;
+  const rn = document.getElementById('rnotif');
+  rn.textContent = pend; rn.style.display = pend > 0 ? 'flex' : 'none';
+
+  // Strategy list
+  const sl = document.getElementById('stratList');
+  if (!strategies.length) {
+    sl.innerHTML = '<div class="empty"><h3>No strategies yet</h3><p>Click "Upload New Strategy" to add your first one</p></div>';
+  } else {
+    sl.innerHTML = strategies.map(s => `
+      <div class="item">
+        <div class="item-thumb">${s.image ? `<img src="${s.image}" alt="">` : '📈'}</div>
+        <div class="item-info">
+          <div class="item-name">${x(s.name)}</div>
+          <div class="item-meta">${s.type.toUpperCase()}${s.type==='vip'?' · ₹'+s.price:''} · ${s.date}</div>
+        </div>
+        <div class="item-acts">
+          <button class="ib" title="Delete" onclick="delStrategy('${s.id}')">🗑️</button>
+        </div>
+      </div>`).join('');
+  }
+
+  // Requests list
+  const rl = document.getElementById('reqList');
+  if (!requests.length) {
+    rl.innerHTML = '<div class="empty"><h3>No purchase requests yet</h3><p>Requests from buyers will appear here</p></div>';
+  } else {
+    rl.innerHTML = requests.map(r => `
+      <div class="req">
+        <div class="req-top">
+          <div>
+            <div class="req-name">${x(r.name)} <span style="color:var(--t2);font-weight:400">— ${x(r.phone)}</span></div>
+            <div class="req-strat">⭐ ${x(r.stratName)}</div>
+            <div class="req-meta">TXN: ${x(r.txn)} · ${r.date}</div>
+          </div>
+          <span class="spill ${r.status==='pending'?'sp':r.status==='approved'?'sa':'sr'}">${r.status}</span>
+        </div>
+        ${r.screenshot ? `<img src="${r.screenshot}" class="ss-img" alt="Payment proof">` : ''}
+        ${r.status==='pending' ? `
+          <div class="req-acts">
+            <button class="btn-ap" onclick="approveReq('${r.id}','${r.stratId}')">✅ Grant Access</button>
+            <button class="btn-rj" onclick="rejectReq('${r.id}')">❌ Reject</button>
+          </div>` : ''}
+      </div>`).join('');
+  }
+}
+
+// ════════════════════════════════════════════
+// UPLOAD
+// ════════════════════════════════════════════
+function openUpload() {
+  upImgData = null; upCodeData = null; upQrData = null;
+  ['imgPrev','pinePrev','qrPrev'].forEach(id => document.getElementById(id).style.display='none');
+  document.getElementById('imgThumb').style.display = 'none';
+  ['upName','upCap','upCode','upPrice','upUpi'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('upErr').classList.remove('show');
+  document.getElementById('progFill').style.width='0';
+  setType('free');
+  document.getElementById('upOv').classList.add('open');
+}
+function closeUp() { if (!uploading) document.getElementById('upOv').classList.remove('open'); }
+
+function setType(t) {
+  upType = t;
+  document.getElementById('bFree').className='tgl-btn'+(t==='free'?' tf':'');
+  document.getElementById('bVip').className='tgl-btn'+(t==='vip'?' tv':'');
+  document.getElementById('vipFlds').className='vip-flds'+(t==='vip'?' show':'');
+  document.getElementById('upBtn').className='btn-p'+(t==='vip'?' btn-gold':' btn-green');
+}
+
+function hImg(inp) {
+  resizeImage(inp.files[0], 800, data => {
+    upImgData = data;
+    document.getElementById('imgThumb').style.display='block';
+    document.getElementById('imgThumbImg').src=data;
+    document.getElementById('imgPrev').style.display='flex';
+    document.getElementById('imgNm').textContent=inp.files[0].name;
+  });
+}
+function hPine(inp) {
+  const r = new FileReader();
+  r.onload = e => {
+    upCodeData = e.target.result;
+    document.getElementById('upCode').value = e.target.result;
+    document.getElementById('pinePrev').style.display='flex';
+    document.getElementById('pineNm').textContent=inp.files[0].name;
+  };
+  r.readAsText(inp.files[0]);
+}
+function hQr(inp) {
+  resizeImage(inp.files[0], 400, data => {
+    upQrData = data;
+    document.getElementById('qrPrev').style.display='flex';
+    document.getElementById('qrNm').textContent=inp.files[0].name;
+  });
+}
+
+// Resize image to reduce storage size
+function resizeImage(file, maxW, cb) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ratio = Math.min(maxW / img.width, maxW / img.height, 1);
+      canvas.width = img.width * ratio;
+      canvas.height = img.height * ratio;
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      cb(canvas.toDataURL('image/jpeg', 0.82));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function setProgress(p) {
+  document.getElementById('progFill').style.width = p + '%';
+}
+
+async function doUpload() {
+  if (uploading) return;
+  const name = document.getElementById('upName').value.trim();
+  const cap  = document.getElementById('upCap').value.trim();
+  const code = document.getElementById('upCode').value.trim();
+  const er   = document.getElementById('upErr');
+
+  if (!name) { er.textContent='❌ Enter strategy name'; er.classList.add('show'); return; }
+  if (!code)  { er.textContent='❌ Add Pine Script code'; er.classList.add('show'); return; }
+  if (upType==='vip' && !document.getElementById('upPrice').value) { er.textContent='❌ Enter price'; er.classList.add('show'); return; }
+  if (upType==='vip' && !document.getElementById('upUpi').value.trim()) { er.textContent='❌ Enter UPI ID'; er.classList.add('show'); return; }
+
+  uploading = true;
+  er.classList.remove('show');
+  document.getElementById('upBtn').textContent = '⏳ Uploading...';
+  setProgress(10);
+
+  try {
+    const id = Date.now().toString();
+    const strategy = {
+      id, name, cap, type: upType,
+      code,  // stored directly in strategies.json (plain text, in your private-ish repo)
+      preview: code.slice(0, 500), // first 500 chars for public preview
+      image: upImgData || null,
+      price: upType==='vip' ? document.getElementById('upPrice').value : null,
+      upi:   upType==='vip' ? document.getElementById('upUpi').value.trim() : null,
+      qr:    upType==='vip' ? (upQrData || null) : null,
+      date:  new Date().toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'})
+    };
+
+    setProgress(40);
+
+    // Fetch current strategies.json
+    const current = [...strategies];
+    current.unshift(strategy);
+
+    setProgress(70);
+
+    // Save to GitHub
+    await saveJson('data/strategies.json', current, `Add strategy: ${name}`);
+
+    setProgress(100);
+
+    strategies = current;
+    renderAll();
+    closeUp();
+    toast(`"${name}" uploaded to GitHub! 🎉`, 'ok');
+
+  } catch(e) {
+    er.textContent = '❌ Upload failed: ' + e.message;
+    er.classList.add('show');
+    toast('Upload failed', 'bad');
+  }
+
+  uploading = false;
+  document.getElementById('upBtn').textContent = 'Upload to GitHub →';
+  setProgress(0);
+}
+
+// ════════════════════════════════════════════
+// DELETE STRATEGY
+// ════════════════════════════════════════════
+async function delStrategy(id) {
+  if (!confirm('Delete this strategy from GitHub?')) return;
+  try {
+    const updated = strategies.filter(s => s.id !== id);
+    await saveJson('data/strategies.json', updated, `Delete strategy ${id}`);
+    strategies = updated;
+    renderAll();
+    toast('Deleted', 'ok');
+  } catch(e) {
+    toast('Delete failed', 'bad');
+  }
+}
+
+// ════════════════════════════════════════════
+// APPROVE / REJECT REQUESTS
+// ════════════════════════════════════════════
+async function approveReq(rid, stratId) {
+  try {
+    const req = requests.find(r => r.id === rid);
+    if (!req) return;
+    req.status = 'approved';
+    req.approvedAt = new Date().toISOString();
+
+    // Add to approved list in strategies.json (add approvedBuyers field)
+    const strat = strategies.find(s => s.id === stratId);
+    if (strat) {
+      if (!strat.approvedBuyers) strat.approvedBuyers = [];
+      // Store buyer phone as access key (buyer checks their phone in store)
+      if (!strat.approvedBuyers.includes(req.phone)) {
+        strat.approvedBuyers.push(req.phone);
+      }
+      await saveJson('data/strategies.json', strategies, `Approve access: ${req.name}`);
+    }
+
+    await saveJson('data/requests.json', requests, `Approve request ${rid}`);
+    renderAll();
+    toast(`Access granted to ${req.name} ✅`, 'ok');
+  } catch(e) {
+    toast('Failed to approve', 'bad');
+  }
+}
+
+async function rejectReq(rid) {
+  try {
+    const req = requests.find(r => r.id === rid);
+    if (!req) return;
+    req.status = 'rejected';
+    await saveJson('data/requests.json', requests, `Reject request ${rid}`);
+    renderAll();
+    toast('Request rejected', 'ok');
+  } catch(e) {
+    toast('Failed to reject', 'bad');
+  }
+}
+
+// ════════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════════
+function toast(msg, t='ok') {
+  const el = document.createElement('div');
+  el.className = `toast ${t}`;
+  el.innerHTML = `<span>${t==='ok'?'✅':t==='info'?'ℹ️':'❌'}</span>${msg}`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+function x(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') }
+
+// Close modal on bg click
+document.getElementById('upOv').addEventListener('click', function(e) { if (e.target===this) closeUp(); });
+
+// ════════════════════════════════════════════
+// AUTO-LOAD if already configured
+// ════════════════════════════════════════════
+const saved = localStorage.getItem('pvgh');
+if (saved) {
+  try {
+    GH = JSON.parse(saved);
+    document.getElementById('ghUser').value = GH.owner;
+    document.getElementById('ghRepo').value = GH.repo;
+    document.getElementById('ghBranch').value = GH.branch;
+    startApp();
+  } catch(e) {
+    localStorage.removeItem('pvgh');
+  }
+}
+</script>
+</body>
+</html>
