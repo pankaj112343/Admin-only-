@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PineVault — Admin Panel (PRIVATE)</title>
+<title>PineVault — Admin Panel (Supabase)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
     --bg: #0a0b0f; --surface: #111318; --surface2: #181c24; --surface3: #1e2330;
@@ -21,7 +22,6 @@
   body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
   body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(0,212,170,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,170,0.03) 1px,transparent 1px); background-size: 48px 48px; pointer-events: none; z-index: 0; }
 
-  /* ── LOGIN ── */
   #loginScreen { position: fixed; inset: 0; z-index: 999; background: var(--bg); display: flex; align-items: center; justify-content: center; padding: 20px; }
   .login-box { width: 100%; max-width: 420px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: 40px 36px; text-align: center; }
   .login-icon { width: 56px; height: 56px; background: linear-gradient(135deg,var(--accent2),var(--accent)); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 20px; }
@@ -31,13 +31,11 @@
   .login-error.show { display: block; }
   .private-warning { background: rgba(245,166,35,0.08); border: 1px solid rgba(245,166,35,0.25); border-radius: 8px; padding: 10px 14px; font-size: 0.78rem; color: var(--accent-vip); margin-bottom: 20px; line-height: 1.5; }
 
-  /* ── NAV ── */
   nav { position: sticky; top: 0; z-index: 100; background: rgba(10,11,15,0.92); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 64px; }
   .logo { display: flex; align-items: center; gap: 10px; font-size: 1.2rem; font-weight: 700; text-decoration: none; color: var(--text); }
   .logo-icon { width: 32px; height: 32px; background: linear-gradient(135deg,var(--accent),var(--accent2)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
   .admin-badge { background: rgba(255,77,109,0.12); border: 1px solid rgba(255,77,109,0.3); color: var(--danger); border-radius: 6px; padding: 3px 10px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
 
-  /* ── LAYOUT ── */
   #mainContent { display: none; position: relative; z-index: 1; }
   #mainContent.visible { display: block; }
   .admin-panel { max-width: 900px; margin: 0 auto; padding: 40px 2rem; }
@@ -180,7 +178,7 @@
     <div class="admin-avatar">P</div>
     <div class="admin-info">
       <h2>Pankaj's Dashboard</h2>
-      <p>PineVault Admin Panel — data synced to cloud via JSONBin</p>
+      <p>PineVault Admin Panel — data stored in Supabase (unlimited)</p>
     </div>
   </div>
 
@@ -208,7 +206,7 @@
   <div class="modal">
     <button class="modal-close" onclick="closeUploadModal()">✕</button>
     <div class="modal-title">Upload Strategy</div>
-    <div class="modal-sub">Data is saved to JSONBin and available on all devices instantly.</div>
+    <div class="modal-sub">Data stored in Supabase — unlimited strategies.</div>
 
     <div class="form-group"><label>Strategy Name</label><input type="text" id="upName" placeholder="e.g. EMA Crossover Pro v2"></div>
     <div class="form-group"><label>Caption / Description</label><textarea id="upCaption" rows="3" placeholder="Describe the strategy..."></textarea></div>
@@ -219,7 +217,7 @@
         <input type="file" id="imgInput" accept="image/*" onchange="handleImgSelect(this)">
         <div class="file-drop-icon">🖼️</div>
         <div class="file-drop-text">Drop image or click to browse</div>
-        <div class="file-drop-hint">JPG, PNG, WebP — will be compressed & resized</div>
+        <div class="file-drop-hint">Will be compressed & stored in Supabase Storage</div>
       </div>
       <div class="file-preview" id="imgPreview"><span>✅</span> <span id="imgName">image.jpg</span></div>
     </div>
@@ -265,7 +263,7 @@
   <div class="modal" style="max-width:720px;">
     <button class="modal-close" onclick="document.getElementById('codeModal').classList.remove('open')">✕</button>
     <div class="modal-title" id="codeModalTitle">Pine Script Code</div>
-    <div class="modal-sub">VIP code is stored in cloud (admin-accessible). Free code is also public.</div>
+    <div class="modal-sub">VIP code is stored compressed (admin-accessible only).</div>
     <button class="mini-btn ok" style="margin-bottom:12px;" onclick="downloadAdminCode()">⬇ Download .pine</button>
     <div class="code-viewer" id="codeViewer"></div>
   </div>
@@ -274,384 +272,347 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
-// ════════════════════════════════════════════════
-//  JSONBIN CONFIG
-// ════════════════════════════════════════════════
-const BIN_ID  = '6a0be9676610dd3ae86aa9a0';
-const API_KEY = '$2a$10$Plp0mbu0EX8HaPCAmx2rouVjVcrRGBo9DGa8VNQiH0MdtKT0FF8mO';
-const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
-const ADMIN_KEY = 'P@nkaj1243';
+  // ========== SUPABASE CONFIG ==========
+  const SUPABASE_URL = 'https://vyayspsypuktkuvvbugd.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_UQXS7GaCQZLFNyE8ZlvtzA_42z65FHv';
+  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  
+  const ADMIN_KEY = 'P@nkaj1243';
+  let strategies = [];
+  let paymentRequests = [];
+  let uploadType = 'free';
+  let pineText = null;
+  let imgFile = null;
+  let qrFile = null;
+  let currentCodeId = null;
 
-let strategies      = [];
-let paymentRequests = [];
-let uploadType      = 'free';
-let imgData         = null;
-let pineText        = null;
-let qrData          = null;
-let currentCodeId   = null;
-
-function showSaving(v) {
-  document.getElementById('savingOverlay').classList.toggle('show', v);
-}
-
-// Compression helpers
-function compressCode(code) {
-  return LZString.compressToBase64(code);
-}
-function decompressCode(compressed) {
-  if (!compressed) return '';
-  try {
-    return LZString.decompressFromBase64(compressed);
-  } catch(e) { return compressed; }
-}
-
-// Image compression (resize + JPEG quality)
-function compressImage(file, maxWidth, quality, callback) {
-  const reader = new FileReader();
-  reader.onload = function(ev) {
-    const img = new Image();
-    img.onload = function() {
-      const canvas = document.createElement('canvas');
-      let width = img.width;
-      let height = img.height;
-      if (width > maxWidth) {
-        height = height * (maxWidth / width);
-        width = maxWidth;
-      }
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, width, height);
-      const dataUrl = canvas.toDataURL('image/jpeg', quality);
-      callback(dataUrl);
-    };
-    img.src = ev.target.result;
-  };
-  reader.readAsDataURL(file);
-}
-
-// File handlers with compression
-function handleImgSelect(input) {
-  const file = input.files[0]; if (!file) return;
-  compressImage(file, 400, 0.6, (compressedUrl) => {
-    imgData = compressedUrl;
-    document.getElementById('imgName').textContent = file.name;
-    document.getElementById('imgPreview').style.display = 'flex';
-  });
-}
-function handleQrSelect(input) {
-  const file = input.files[0]; if (!file) return;
-  compressImage(file, 200, 0.6, (compressedUrl) => {
-    qrData = compressedUrl;
-    document.getElementById('qrName').textContent = file.name;
-    document.getElementById('qrPreview').style.display = 'flex';
-  });
-}
-function handlePineSelect(input) {
-  const file = input.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    pineText = e.target.result;
-    document.getElementById('pineName').textContent = file.name;
-    document.getElementById('pinePreview').style.display = 'flex';
-  };
-  reader.readAsText(file);
-}
-
-// JSONBin operations
-async function loadData() {
-  try {
-    const res = await fetch(BIN_URL + '/latest', {
-      headers: { 'X-Master-Key': API_KEY }
-    });
-    if (!res.ok) throw new Error('Fetch failed: ' + res.status);
-    const json = await res.json();
-    const data = json.record || {};
-    strategies      = data.strategies       || [];
-    paymentRequests = data.paymentRequests  || [];
-    // Migration: convert old format (raw code) to compressed
-    let changed = false;
-    for (let s of strategies) {
-      if (s.code && !s.code_compressed) {
-        s.code_compressed = compressCode(s.code);
-        delete s.code;
-        changed = true;
-      }
-    }
-    if (changed) {
-      await saveData();
-    }
-    return true;
-  } catch(e) {
-    toast('Failed to load data: ' + e.message, 'error');
-    return false;
+  function showSaving(v) { document.getElementById('savingOverlay').classList.toggle('show', v); }
+  function compressCode(code) { return LZString.compressToBase64(code); }
+  function decompressCode(compressed) {
+    if (!compressed) return '';
+    try { return LZString.decompressFromBase64(compressed); } catch(e) { return compressed; }
   }
-}
 
-async function saveData() {
-  showSaving(true);
-  try {
-    const res = await fetch(BIN_URL, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': API_KEY
-      },
-      body: JSON.stringify({ strategies, paymentRequests })
+  async function compressImageFile(file, maxWidth, quality) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width, height = img.height;
+          if (width > maxWidth) { height = height * (maxWidth / width); width = maxWidth; }
+          canvas.width = width; canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob((blob) => resolve(blob), 'image/jpeg', quality);
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
     });
-    if (!res.ok) throw new Error('Save failed: ' + res.status);
-    showSaving(false);
-    return true;
-  } catch(e) {
-    showSaving(false);
-    toast('Save failed: ' + e.message, 'error');
-    return false;
   }
-}
 
-async function refreshData() {
-  const ok = await loadData();
-  if (ok) {
+  async function uploadFile(bucket, path, file) {
+    const { data, error } = await supabase.storage.from(bucket).upload(path, file, { upsert: true });
+    if (error) throw error;
+    const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(path);
+    return publicUrl;
+  }
+
+  async function loadData() {
+    showSaving(true);
+    try {
+      const { data: s, error: e1 } = await supabase.from('strategies').select('*').order('created_at', { ascending: false });
+      if (e1) throw e1;
+      strategies = s || [];
+      const { data: p, error: e2 } = await supabase.from('payment_requests').select('*').order('created_at', { ascending: false });
+      if (e2) throw e2;
+      paymentRequests = p || [];
+      showSaving(false);
+      return true;
+    } catch(e) {
+      showSaving(false);
+      toast('Load error: ' + e.message, 'error');
+      return false;
+    }
+  }
+
+  async function saveNewStrategy(strategy) {
+    showSaving(true);
+    try {
+      const { error } = await supabase.from('strategies').insert([strategy]);
+      if (error) throw error;
+      showSaving(false);
+      return true;
+    } catch(e) {
+      showSaving(false);
+      toast('Save failed: ' + e.message, 'error');
+      return false;
+    }
+  }
+
+  async function updatePaymentRequest(id, updates) {
+    showSaving(true);
+    try {
+      const { error } = await supabase.from('payment_requests').update(updates).eq('id', id);
+      if (error) throw error;
+      showSaving(false);
+      return true;
+    } catch(e) {
+      showSaving(false);
+      toast('Update failed: ' + e.message, 'error');
+      return false;
+    }
+  }
+
+  async function deleteStrategyFromDB(id) {
+    showSaving(true);
+    try {
+      const { error } = await supabase.from('strategies').delete().eq('id', id);
+      if (error) throw error;
+      showSaving(false);
+      return true;
+    } catch(e) {
+      showSaving(false);
+      toast('Delete failed: ' + e.message, 'error');
+      return false;
+    }
+  }
+
+  async function deletePaymentRequestFromDB(id) {
+    showSaving(true);
+    try {
+      const { error } = await supabase.from('payment_requests').delete().eq('id', id);
+      if (error) throw error;
+      showSaving(false);
+      return true;
+    } catch(e) {
+      showSaving(false);
+      toast('Delete failed: ' + e.message, 'error');
+      return false;
+    }
+  }
+
+  async function refreshData() {
+    await loadData();
     renderAdminList();
     renderPaymentRequests();
     updateStats();
   }
-}
 
-// Login / Logout
-function doLogin() {
-  const val = document.getElementById('adminKeyInput').value;
-  if (val === ADMIN_KEY) {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('mainContent').classList.add('visible');
-    refreshData();
-    toast('Welcome back, Pankaj! 👋', 'success');
-  } else {
-    document.getElementById('loginError').classList.add('show');
+  function handleImgSelect(input) {
+    imgFile = input.files[0];
+    if (imgFile) { document.getElementById('imgName').textContent = imgFile.name; document.getElementById('imgPreview').style.display = 'flex'; }
+  }
+  function handlePineSelect(input) {
+    const file = input.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => { pineText = e.target.result; document.getElementById('pineName').textContent = file.name; document.getElementById('pinePreview').style.display = 'flex'; };
+    reader.readAsText(file);
+  }
+  function handleQrSelect(input) {
+    qrFile = input.files[0];
+    if (qrFile) { document.getElementById('qrName').textContent = qrFile.name; document.getElementById('qrPreview').style.display = 'flex'; }
+  }
+
+  async function doUpload() {
+    const name = document.getElementById('upName').value.trim();
+    const caption = document.getElementById('upCaption').value.trim();
+    if (!name) { toast('Enter name', 'error'); return; }
+    if (!pineText) { toast('Upload Pine file', 'error'); return; }
+    if (uploadType === 'vip') {
+      if (!document.getElementById('upPrice').value) { toast('Enter price', 'error'); return; }
+      if (!document.getElementById('upUpi').value.trim()) { toast('Enter UPI ID', 'error'); return; }
+    }
+
+    showSaving(true);
+    try {
+      let imageUrl = null, qrUrl = null;
+      if (imgFile) {
+        const compressed = await compressImageFile(imgFile, 400, 0.6);
+        const ext = imgFile.name.split('.').pop();
+        const path = `thumbnails/${Date.now()}_${Math.random()}.${ext}`;
+        imageUrl = await uploadFile('strategy-files', path, compressed);
+      }
+      if (uploadType === 'vip' && qrFile) {
+        const compressed = await compressImageFile(qrFile, 200, 0.6);
+        const ext = qrFile.name.split('.').pop();
+        const path = `qrs/${Date.now()}_${Math.random()}.${ext}`;
+        qrUrl = await uploadFile('strategy-files', path, compressed);
+      }
+      const strategy = {
+        id: Date.now().toString(),
+        name, caption,
+        type: uploadType,
+        code_compressed: compressCode(pineText),
+        image_url: imageUrl,
+        price: uploadType === 'vip' ? document.getElementById('upPrice').value : null,
+        upi: uploadType === 'vip' ? document.getElementById('upUpi').value.trim() : null,
+        qr_url: qrUrl,
+        date: new Date().toLocaleDateString('en-IN')
+      };
+      const ok = await saveNewStrategy(strategy);
+      if (!ok) throw new Error('Insert failed');
+      closeUploadModal();
+      await refreshData();
+      toast(`"${name}" uploaded!`, 'success');
+    } catch(e) {
+      toast('Upload failed: ' + e.message, 'error');
+    } finally {
+      showSaving(false);
+    }
+  }
+
+  async function deleteStrategy(id) {
+    if (!confirm('Delete permanently?')) return;
+    const ok = await deleteStrategyFromDB(id);
+    if (ok) await refreshData();
+  }
+
+  async function approveRequest(id) {
+    const r = paymentRequests.find(x => x.id === id); if (!r) return;
+    const linkEl = document.getElementById(`link_${id}`);
+    const deliveryLink = linkEl ? linkEl.value.trim() : null;
+    const ok = await updatePaymentRequest(id, { status: 'approved', delivery_link: deliveryLink });
+    if (ok) await refreshData();
+  }
+  async function rejectRequest(id) {
+    const ok = await updatePaymentRequest(id, { status: 'rejected' });
+    if (ok) await refreshData();
+  }
+  async function deleteRequest(id) {
+    if (!confirm('Delete request?')) return;
+    const ok = await deletePaymentRequestFromDB(id);
+    if (ok) await refreshData();
+  }
+
+  function viewCode(id) {
+    const s = strategies.find(x => x.id === id);
+    if (!s) return;
+    let fullCode = decompressCode(s.code_compressed);
+    currentCodeId = id;
+    document.getElementById('codeModalTitle').textContent = s.name + ' — Pine Script';
+    document.getElementById('codeViewer').textContent = fullCode;
+    document.getElementById('codeModal').classList.add('open');
+  }
+  function downloadAdminCode() {
+    const s = strategies.find(x => x.id === currentCodeId);
+    if (!s) return;
+    let fullCode = decompressCode(s.code_compressed);
+    const blob = new Blob([fullCode], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = s.name.replace(/[^a-z0-9]/gi, '_') + '.pine';
+    a.click();
+    toast('Downloaded', 'success');
+  }
+
+  function renderAdminList() {
+    const container = document.getElementById('adminList');
+    if (!strategies.length) { container.innerHTML = '<div style="text-align:center;color:var(--text3);padding:40px;">No strategies yet.</div>'; return; }
+    container.innerHTML = strategies.map(s => `
+      <div class="admin-list-item">
+        <div class="admin-item-thumb">${s.image_url ? `<img src="${s.image_url}" alt="">` : '📈'}</div>
+        <div class="admin-item-info">
+          <div class="admin-item-name">${escHtml(s.name)}</div>
+          <div class="admin-item-meta">${s.type.toUpperCase()} ${s.type==='vip'?'· ₹'+s.price:''} · ${s.date}</div>
+        </div>
+        <div class="admin-item-actions">
+          <button class="btn-icon" onclick="viewCode('${s.id}')">👁️</button>
+          <button class="btn-icon" onclick="deleteStrategy('${s.id}')">🗑️</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderPaymentRequests() {
+    const c = document.getElementById('paymentRequestsList');
+    if (!paymentRequests.length) { c.innerHTML = '<div style="text-align:center;color:var(--text3);padding:24px;">No requests.</div>'; return; }
+    c.innerHTML = paymentRequests.map(r => `
+      <div class="request-card ${r.status}">
+        <div class="request-top">
+          <div><div class="request-title">${escHtml(r.strategy_name)}</div><div style="font-size:.76rem;">${escHtml(r.date)}</div></div>
+          <span class="request-status ${r.status}">${r.status}</span>
+        </div>
+        <div class="request-grid">
+          <div class="request-field"><b>Name</b>${escHtml(r.name)}</div>
+          <div class="request-field"><b>Phone</b>${escHtml(r.phone)}</div>
+          <div class="request-field"><b>Amount</b>₹${escHtml(r.amount)}</div>
+          <div class="request-field"><b>Txn ID</b>${escHtml(r.txn)}</div>
+        </div>
+        ${r.screenshot_url ? `<a class="mini-btn" href="${r.screenshot_url}" target="_blank">📷 View Screenshot</a>` : ''}
+        <div class="request-actions">
+          ${r.status === 'pending' ? `
+            <input class="delivery-link-input" id="link_${r.id}" placeholder="Download link (Google Drive)" value="${r.delivery_link || ''}">
+            <button class="mini-btn ok" onclick="approveRequest('${r.id}')">✅ Approve</button>
+            <button class="mini-btn no" onclick="rejectRequest('${r.id}')">❌ Reject</button>
+          ` : `<span>Delivery: ${r.delivery_link ? `<a href="${r.delivery_link}" target="_blank">Link</a>` : 'none'}</span>`}
+          <button class="mini-btn no" onclick="deleteRequest('${r.id}')">🗑️ Delete</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function updateStats() {
+    document.getElementById('statTotal').textContent = strategies.length;
+    document.getElementById('statFree').textContent = strategies.filter(s => s.type === 'free').length;
+    document.getElementById('statVip').textContent = strategies.filter(s => s.type === 'vip').length;
+    document.getElementById('statPending').textContent = paymentRequests.filter(r => r.status === 'pending').length;
+  }
+
+  function doLogin() {
+    const val = document.getElementById('adminKeyInput').value;
+    if (val === ADMIN_KEY) {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('mainContent').classList.add('visible');
+      refreshData();
+      toast('Welcome back!', 'success');
+    } else {
+      document.getElementById('loginError').classList.add('show');
+      document.getElementById('adminKeyInput').value = '';
+    }
+  }
+  function doLogout() {
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('mainContent').classList.remove('visible');
     document.getElementById('adminKeyInput').value = '';
+    document.getElementById('loginError').classList.remove('show');
+    toast('Logged out', 'success');
   }
-}
-function doLogout() {
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('mainContent').classList.remove('visible');
-  document.getElementById('adminKeyInput').value = '';
-  document.getElementById('loginError').classList.remove('show');
-  strategies = []; paymentRequests = [];
-  toast('Logged out', 'success');
-}
-
-// Upload modal
-function openUploadModal() {
-  imgData = null; pineText = null; qrData = null;
-  document.getElementById('imgPreview').style.display = 'none';
-  document.getElementById('pinePreview').style.display = 'none';
-  document.getElementById('qrPreview').style.display = 'none';
-  document.getElementById('upName').value = '';
-  document.getElementById('upCaption').value = '';
-  document.getElementById('upPrice').value = '';
-  document.getElementById('upUpi').value = '';
-  setType('free');
-  document.getElementById('uploadModal').classList.add('open');
-}
-function closeUploadModal() {
-  document.getElementById('uploadModal').classList.remove('open');
-}
-function setType(t) {
-  uploadType = t;
-  const btnFree  = document.getElementById('btnFree');
-  const btnVip   = document.getElementById('btnVip');
-  const vipFields = document.getElementById('vipFields');
-  const uploadBtn = document.getElementById('uploadBtn');
-  if (t === 'free') {
-    btnFree.className = 'toggle-btn active-free';
-    btnVip.className = 'toggle-btn';
-    vipFields.classList.remove('show');
-    uploadBtn.className = 'btn-primary';
-  } else {
-    btnFree.className = 'toggle-btn';
-    btnVip.className = 'toggle-btn active-vip';
-    vipFields.classList.add('show');
-    uploadBtn.className = 'btn-primary vip-btn';
+  function openUploadModal() {
+    imgFile = null; qrFile = null; pineText = null;
+    document.getElementById('imgPreview').style.display = 'none';
+    document.getElementById('pinePreview').style.display = 'none';
+    document.getElementById('qrPreview').style.display = 'none';
+    document.getElementById('upName').value = '';
+    document.getElementById('upCaption').value = '';
+    document.getElementById('upPrice').value = '';
+    document.getElementById('upUpi').value = '';
+    setType('free');
+    document.getElementById('uploadModal').classList.add('open');
   }
-}
-
-async function doUpload() {
-  const name    = document.getElementById('upName').value.trim();
-  const caption = document.getElementById('upCaption').value.trim();
-  if (!name)     { toast('Please enter a strategy name', 'error'); return; }
-  if (!pineText) { toast('Please upload a Pine Script file', 'error'); return; }
-  if (uploadType === 'vip') {
-    if (!document.getElementById('upPrice').value) { toast('Please enter a price', 'error'); return; }
-    if (!document.getElementById('upUpi').value.trim()) { toast('Please enter UPI ID', 'error'); return; }
+  function closeUploadModal() { document.getElementById('uploadModal').classList.remove('open'); }
+  function setType(t) {
+    uploadType = t;
+    const btnFree = document.getElementById('btnFree'), btnVip = document.getElementById('btnVip'), vipFields = document.getElementById('vipFields'), uploadBtn = document.getElementById('uploadBtn');
+    if (t === 'free') {
+      btnFree.className = 'toggle-btn active-free'; btnVip.className = 'toggle-btn';
+      vipFields.classList.remove('show'); uploadBtn.className = 'btn-primary';
+    } else {
+      btnFree.className = 'toggle-btn'; btnVip.className = 'toggle-btn active-vip';
+      vipFields.classList.add('show'); uploadBtn.className = 'btn-primary vip-btn';
+    }
   }
-
-  const strategy = {
-    id: Date.now().toString(),
-    name, caption,
-    type: uploadType,
-    code_compressed: compressCode(pineText),
-    image: imgData || null,
-    price: uploadType === 'vip' ? document.getElementById('upPrice').value : null,
-    upi:   uploadType === 'vip' ? document.getElementById('upUpi').value.trim() : null,
-    qr:    uploadType === 'vip' ? (qrData || null) : null,
-    date: new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })
-  };
-
-  strategies.unshift(strategy);
-  const ok = await saveData();
-  if (!ok) { strategies.shift(); return; }
-  closeUploadModal();
-  renderAdminList();
-  updateStats();
-  toast(`"${name}" uploaded successfully! 🎉`, 'success');
-}
-
-// Admin list
-function renderAdminList() {
-  const container = document.getElementById('adminList');
-  if (strategies.length === 0) {
-    container.innerHTML = `<div style="text-align:center;color:var(--text3);padding:40px;font-size:0.85rem;">No strategies uploaded yet.</div>`;
-    return;
+  function escHtml(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function toast(msg, type='success') {
+    const el = document.createElement('div'); el.className = `toast ${type}`;
+    el.innerHTML = `<span>${type==='success'?'✅':'❌'}</span> ${msg}`;
+    document.getElementById('toastContainer').appendChild(el);
+    setTimeout(() => el.remove(), 3500);
   }
-  container.innerHTML = strategies.map(s => `
-    <div class="admin-list-item">
-      <div class="admin-item-thumb">${s.image ? `<img src="${s.image}" alt="">` : '📈'}</div>
-      <div class="admin-item-info">
-        <div class="admin-item-name">${escHtml(s.name)}</div>
-        <div class="admin-item-meta">${s.type.toUpperCase()} ${s.type==='vip'?'· ₹'+s.price:''} · ${s.date}</div>
-      </div>
-      <div class="admin-item-actions">
-        <button class="btn-icon" title="View Code" onclick="viewCode('${s.id}')">👁️</button>
-        <button class="btn-icon" title="Delete" onclick="deleteStrategy('${s.id}')">🗑️</button>
-      </div>
-    </div>
-  `).join('');
-}
-
-function viewCode(id) {
-  const s = strategies.find(x => x.id === id);
-  if (!s) return;
-  let fullCode = s.code_compressed ? decompressCode(s.code_compressed) : (s.code || '(no code)');
-  currentCodeId = id;
-  document.getElementById('codeModalTitle').textContent = s.name + ' — Pine Script';
-  document.getElementById('codeViewer').textContent = fullCode;
-  document.getElementById('codeModal').classList.add('open');
-}
-
-function downloadAdminCode() {
-  const s = strategies.find(x => x.id === currentCodeId);
-  if (!s) return;
-  let fullCode = s.code_compressed ? decompressCode(s.code_compressed) : (s.code || '');
-  const blob = new Blob([fullCode], { type: 'text/plain' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = s.name.replace(/[^a-z0-9]/gi, '_') + '.pine';
-  a.click();
-  toast('Downloaded!', 'success');
-}
-
-async function deleteStrategy(id) {
-  if (!confirm('Delete this strategy? This cannot be undone.')) return;
-  const prev = [...strategies];
-  strategies = strategies.filter(s => s.id !== id);
-  paymentRequests = paymentRequests.filter(r => r.strategyId !== id);
-  const ok = await saveData();
-  if (!ok) { strategies = prev; return; }
-  renderAdminList();
-  renderPaymentRequests();
-  updateStats();
-  toast('Strategy deleted', 'success');
-}
-
-function updateStats() {
-  document.getElementById('statTotal').textContent   = strategies.length;
-  document.getElementById('statFree').textContent    = strategies.filter(s => s.type === 'free').length;
-  document.getElementById('statVip').textContent     = strategies.filter(s => s.type === 'vip').length;
-  document.getElementById('statPending').textContent = paymentRequests.filter(r => r.status === 'pending').length;
-}
-
-// Payment requests
-function renderPaymentRequests() {
-  const c = document.getElementById('paymentRequestsList');
-  if (paymentRequests.length === 0) {
-    c.innerHTML = `<div style="text-align:center;color:var(--text3);padding:24px;font-size:0.85rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">No VIP payment requests yet.</div>`;
-    return;
-  }
-  c.innerHTML = paymentRequests.map(r => `
-    <div class="request-card ${r.status}">
-      <div class="request-top">
-        <div><div class="request-title">${escHtml(r.strategyName)}</div><div style="font-size:.76rem;color:var(--text3);font-family:var(--mono);margin-top:2px">${escHtml(r.date)}</div></div>
-        <span class="request-status ${r.status}">${r.status}</span>
-      </div>
-      <div class="request-grid">
-        <div class="request-field"><b>Name</b>${escHtml(r.name)}</div>
-        <div class="request-field"><b>Phone</b>${escHtml(r.phone)}</div>
-        <div class="request-field"><b>Amount</b>₹${escHtml(r.amount)}</div>
-        <div class="request-field"><b>Transaction ID</b>${escHtml(r.txn)}</div>
-      </div>
-      ${r.screenshot ? `<a class="mini-btn" href="${r.screenshot}" target="_blank">📷 View Screenshot</a>` : `<span style="font-size:.78rem;color:var(--text3)">No screenshot</span>`}
-      <div class="request-actions">
-        ${r.status === 'pending' ? `
-          <input class="delivery-link-input" id="link_${r.id}" placeholder="Paste Google Drive / direct link to .pine file (optional)" value="${r.deliveryLink || ''}">
-          <button class="mini-btn ok" onclick="approveRequest('${r.id}')">✅ Approve & Unlock</button>
-          <button class="mini-btn no" onclick="rejectRequest('${r.id}')">❌ Reject</button>
-        ` : `
-          <span style="font-size:.78rem;color:var(--text3)">Delivery: ${r.deliveryLink ? `<a href="${r.deliveryLink}" target="_blank" style="color:var(--accent)">${r.deliveryLink}</a>` : 'not set'}</span>
-        `}
-        <button class="mini-btn no" onclick="deleteRequest('${r.id}')">🗑️ Delete</button>
-      </div>
-      ${r.status === 'pending' ? `<div class="delivery-hint">💡 Paste a Google Drive / Dropbox link to the .pine file above before approving. Customer will see this link on their "My Access" page.</div>` : ''}
-    </div>
-  `).join('');
-}
-
-async function approveRequest(id) {
-  const r = paymentRequests.find(x => x.id === id); if (!r) return;
-  const linkEl = document.getElementById('link_' + id);
-  r.deliveryLink = linkEl ? linkEl.value.trim() : null;
-  r.status = 'approved';
-  const ok = await saveData();
-  if (!ok) { r.status = 'pending'; return; }
-  renderPaymentRequests();
-  updateStats();
-  toast('Download access approved ✅', 'success');
-}
-
-async function rejectRequest(id) {
-  const r = paymentRequests.find(x => x.id === id); if (!r) return;
-  r.status = 'rejected';
-  const ok = await saveData();
-  if (!ok) { r.status = 'pending'; return; }
-  renderPaymentRequests();
-  updateStats();
-  toast('Request rejected', 'success');
-}
-
-async function deleteRequest(id) {
-  if (!confirm('Delete this payment request?')) return;
-  const prev = [...paymentRequests];
-  paymentRequests = paymentRequests.filter(x => x.id !== id);
-  const ok = await saveData();
-  if (!ok) { paymentRequests = prev; return; }
-  renderPaymentRequests();
-  updateStats();
-  toast('Request deleted', 'success');
-}
-
-function toast(msg, type = 'success') {
-  const el = document.createElement('div');
-  el.className = `toast ${type}`;
-  el.innerHTML = `<span>${type==='success'?'✅':'❌'}</span> ${msg}`;
-  document.getElementById('toastContainer').appendChild(el);
-  setTimeout(() => el.remove(), 3500);
-}
-
-function escHtml(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-document.getElementById('uploadModal').addEventListener('click', function(e) { if (e.target === this) closeUploadModal(); });
-document.getElementById('codeModal').addEventListener('click', function(e) { if (e.target === this) this.classList.remove('open'); });
+  document.getElementById('uploadModal').addEventListener('click', e => { if (e.target === this) closeUploadModal(); });
+  document.getElementById('codeModal').addEventListener('click', e => { if (e.target === this) this.classList.remove('open'); });
 </script>
 </body>
 </html>
